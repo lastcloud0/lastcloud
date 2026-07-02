@@ -9,21 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.3.1",
+    "@react-three/drei": "^10.0.6",
+    "@react-three/fiber": "^9.1.2",
+    "@react-three/postprocessing": "^3.0.4",
+    "lenis": "^1.2.3",
+    "next": "^16.2.10",
+    "postprocessing": "^6.37.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "three": "^0.176.0",
-    "@react-three/fiber": "^9.1.2",
-    "@react-three/drei": "^10.0.6",
-    "@react-three/postprocessing": "^3.0.4",
-    "postprocessing": "^6.37.0",
-    "lenis": "^1.2.3"
+    "three": "^0.176.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.176.0"
+    "@types/three": "^0.176.0",
+    "typescript": "^5"
   }
 }
