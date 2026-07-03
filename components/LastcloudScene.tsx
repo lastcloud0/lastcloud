@@ -36,7 +36,7 @@ export default function LastcloudScene() {
       l.position.set(x, y, z);
       scene.add(l);
     };
-    L(0x5b8cff, -6, 3, 4, 110); L(0xff5fa2, 6, -3, 4, 110); L(0x46e0c0, 0, 5, -4, 80); L(0xffffff, 0, 0, 7, 45);
+    L(0x5b8cff, -6, 3, 4, 160); L(0xff5fa2, 6, -3, 4, 160); L(0x46e0c0, 0, 5, -4, 120); L(0xffffff, 0, 0, 7, 35);
 
     // ================= starfield background (ROLLBACK: set BG = false) =================
     const BG = true;
@@ -100,7 +100,19 @@ export default function LastcloudScene() {
       envMapIntensity: 1.7, transparent: true,
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
+    // logo's own ultra-glossy glass: see-through body, bright colorful edges
+    const logoMaterial = material.clone();
+    logoMaterial.opacity = 1;
+    logoMaterial.roughness = 0.0;
+    logoMaterial.thickness = 1.2;
+    logoMaterial.dispersion = 11;
+    logoMaterial.iridescence = 1;
+    logoMaterial.iridescenceThicknessRange = [200, 800];
+    logoMaterial.clearcoat = 1;
+    logoMaterial.clearcoatRoughness = 0.0;
+    logoMaterial.envMapIntensity = 2.2;
+    logoMaterial.needsUpdate = true;
+    const mesh = new THREE.Mesh(geometry, logoMaterial);
     mesh.rotation.z = Math.PI;
     const group = new THREE.Group();
     group.add(mesh);

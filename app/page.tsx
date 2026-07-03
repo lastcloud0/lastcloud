@@ -71,8 +71,8 @@ export default function Home() {
             </div>
             <h2>YouTube<br />Instagram</h2>
             <div className="cta-row">
-              <a className="cta" href="#" target="_blank" rel="noreferrer">YouTube →</a>
-              <a className="cta cta--ghost" href="#" target="_blank" rel="noreferrer">Instagram →</a>
+              <a className="cta" href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube →</a>
+              <a className="cta cta--ghost" href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram →</a>
             </div>
           </div>
         </section>
@@ -82,8 +82,8 @@ export default function Home() {
           <h2>Contact</h2>
           <div className="links">
             <a href="mailto:jhy0219@gmail.com">Email</a>
-            <a href="#">YouTube</a>
-            <a href="#">Instagram</a>
+            <a href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube</a>
+            <a href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram</a>
             <a href="https://omni-teal.vercel.app/" target="_blank" rel="noreferrer">OMNI</a>
           </div>
           <p className="footer__copy">© 2026 lastcloud</p>
