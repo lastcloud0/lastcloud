@@ -1,13 +1,56 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef, useState } from "react";
+import WorkOverlay from "@/components/WorkOverlay";
 
 const LastcloudScene = dynamic(() => import("@/components/LastcloudScene"), { ssr: false });
 
 export default function Home() {
+  const [workOpen, setWorkOpen] = useState(false);
+  const pausedRef = useRef(false); // pause the 3D render while the overlay covers the screen
+
+  const lenisCtl = () =>
+    (window as unknown as { __lenis?: { stop(): void; start(): void } }).__lenis;
+
+  const openWork = useCallback(() => {
+    setWorkOpen(true);
+    pausedRef.current = true; // opaque overlay covers the screen -> stop the main 3D (overlay has its own starfield)
+    lenisCtl()?.stop(); // release the wheel so the card grid scrolls natively
+    if (window.location.hash !== "#work") {
+      window.history.pushState({ work: 1 }, "", "#work");
+    }
+  }, []);
+
+  const closeWork = useCallback(() => {
+    if (window.location.hash === "#work") {
+      window.history.back();
+    } else {
+      setWorkOpen(false);
+      pausedRef.current = false;
+      lenisCtl()?.start();
+    }
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      setWorkOpen(false);
+      pausedRef.current = false;
+      lenisCtl()?.start();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // slide home left while the portfolio comes in from the right (viewpoint pans right)
+  useEffect(() => {
+    document.body.classList.toggle("work-open", workOpen);
+    document.documentElement.style.overflow = workOpen ? "hidden" : "";
+  }, [workOpen]);
+
   return (
     <>
-      <LastcloudScene />
+      <LastcloudScene pausedRef={pausedRef} />
 
       <div className="content">
         {/* HERO */}
@@ -55,24 +98,24 @@ export default function Home() {
               <h2>Design Beyond<br />the Surface</h2>
               <p>브랜드, UI, 그래픽 감각적인 비주얼과 정교한 디테일의 작업들.</p>
               <div className="cta-row">
-                <a className="cta" href="#" target="_blank" rel="noreferrer">
-                  포트폴리오 보기 →
-                </a>
+                <button className="cta" onClick={openWork}>포트폴리오 보기 →</button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 04 CHANNELS */}
-        <section className="right">
-          <div className="panel">
-            <div className="stat">
-              3,388,875<span>Views</span>
-            </div>
-            <h2>YouTube<br />Instagram</h2>
-            <div className="cta-row">
-              <a className="cta" href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube →</a>
-              <a className="cta cta--ghost" href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram →</a>
+        {/* 04 CHANNELS — pinned: logo morphs into a YouTube icon */}
+        <section className="right pin-section pin-youtube">
+          <div className="pin-inner">
+            <div className="panel">
+              <div className="stat">
+                3,388,875<span>Views</span>
+              </div>
+              <h2>YouTube<br />Instagram</h2>
+              <div className="cta-row">
+                <a className="cta" href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube →</a>
+                <a className="cta cta--ghost" href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram →</a>
+              </div>
             </div>
           </div>
         </section>
@@ -89,6 +132,8 @@ export default function Home() {
           <p className="footer__copy">© 2026 lastcloud</p>
         </footer>
       </div>
+
+      <WorkOverlay open={workOpen} onClose={closeWork} />
     </>
   );
 }

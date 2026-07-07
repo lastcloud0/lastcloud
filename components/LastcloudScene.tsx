@@ -9,7 +9,7 @@ import Lenis from "lenis";
 
 const SVG = `<svg width="3672" height="2294" viewBox="0 0 3672 2294" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3665.75 454.394L1833.92 2286.53L5.41602 457.726C36.0688 300.439 86.7124 149.816 154.682 8.52344L813.049 666.999C845.701 441.064 950.987 239.123 1104.92 84.5014L1398.78 378.416C1286.83 490.383 1217.53 645.005 1217.53 816.289C1217.53 987.572 1278.84 1123.53 1379.46 1233.5C1386.12 1240.83 1392.79 1248.16 1399.45 1254.83C1405.45 1260.83 1412.11 1267.49 1418.77 1272.82C1528.72 1373.46 1675.32 1434.78 1835.92 1434.78C1996.51 1434.78 2161.77 1365.46 2273.72 1253.49C2385.67 1141.53 2454.97 986.906 2454.97 815.622C2454.97 644.339 2386.33 491.05 2275.05 379.082L2568.92 85.1678C2724.18 240.456 2830.13 445.063 2861.45 673.663L3520.49 14.5217C3586.46 152.482 3635.77 300.439 3665.75 454.394Z" fill="white"/></svg>`;
 
-export default function LastcloudScene() {
+export default function LastcloudScene({ pausedRef }: { pausedRef?: { current: boolean } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -203,10 +203,51 @@ export default function LastcloudScene() {
       }
     };
 
+    // ---- YouTube (section 4) morph target: red glass badge + white play triangle ----
+    const roundedRectShape = (w: number, h: number, r: number) => {
+      const s = new THREE.Shape();
+      const x = -w / 2, y = -h / 2;
+      s.moveTo(x + r, y);
+      s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+      s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+      s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+      return s;
+    };
+    // rounded triangle path (play button) — rounds each corner with radius r
+    const roundedTriangle = (pts: [number, number][], r: number) => {
+      const path = new THREE.Path();
+      for (let i = 0; i < 3; i++) {
+        const prev = new THREE.Vector2(pts[(i + 2) % 3][0], pts[(i + 2) % 3][1]);
+        const curr = new THREE.Vector2(pts[i][0], pts[i][1]);
+        const next = new THREE.Vector2(pts[(i + 1) % 3][0], pts[(i + 1) % 3][1]);
+        const p1 = curr.clone().add(prev.clone().sub(curr).normalize().multiplyScalar(r));
+        const p2 = curr.clone().add(next.clone().sub(curr).normalize().multiplyScalar(r));
+        if (i === 0) path.moveTo(p1.x, p1.y);
+        else path.lineTo(p1.x, p1.y);
+        path.quadraticCurveTo(curr.x, curr.y, p2.x, p2.y);
+      }
+      path.closePath();
+      return path;
+    };
+    const ytGroup = new THREE.Group();
+    ytGroup.visible = false;
+    group.add(ytGroup);
+    // glass badge with the play triangle carved out (engraved / 음각), same material as the logo
+    const badgeShape = roundedRectShape(240, 168, 50);
+    badgeShape.holes.push(roundedTriangle([[-26, -44], [-26, 44], [52, 0]], 18));
+    const badgeGeo = new THREE.ExtrudeGeometry(badgeShape, {
+      depth: 30, bevelEnabled: true, bevelThickness: 6, bevelSize: 6, bevelSegments: 5, curveSegments: 16,
+    });
+    badgeGeo.center();
+    ytGroup.add(new THREE.Mesh(badgeGeo, material));
+
     const pinSec = document.querySelector<HTMLElement>(".pin-explode");
     const omniSec = document.querySelector<HTMLElement>(".pin-omni");
+    const ytSec = document.querySelector<HTMLElement>(".pin-youtube");
 
     const lenis = new Lenis({ duration: 1.15, smoothWheel: true });
+    (window as unknown as { __lenis?: Lenis }).__lenis = lenis;
 
     const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
     const onPointer = (e: PointerEvent) => {
@@ -234,6 +275,7 @@ export default function LastcloudScene() {
     let rafId = 0;
     const animate = (now?: number) => {
       rafId = requestAnimationFrame(animate);
+      if (pausedRef?.current) return; // overlay covering the screen -> skip render (perf)
       lenis.raf(now ?? performance.now());
       const t = clock.getElapsedTime();
 
@@ -254,26 +296,44 @@ export default function LastcloudScene() {
       camera.position.y = mouse.y * 0.9;
       camera.lookAt(0, 0, 0);
 
+      // morph curve: ramp in (0-.35) / hold / ramp out (.65-1)
+      const morphAmt = (pp: number) => {
+        if (pp < 0.35) { const x = pp / 0.35; return x * x * (3 - 2 * x); }
+        if (pp > 0.65) { const x = (1 - pp) / 0.35; return x * x * (3 - 2 * x); }
+        return 1;
+      };
+      const secProg = (el: HTMLElement | null) => {
+        if (!el) return 0;
+        const total = el.offsetHeight - window.innerHeight;
+        return total > 0 ? Math.max(0, Math.min(1, -el.getBoundingClientRect().top / total)) : 0;
+      };
+
       // section-2 pin: morph logo into a glass ring + wave
-      let p2 = 0;
-      if (omniSec) {
-        const total2 = omniSec.offsetHeight - window.innerHeight;
-        p2 = total2 > 0 ? -omniSec.getBoundingClientRect().top / total2 : 0;
-        p2 = Math.max(0, Math.min(1, p2));
-      }
+      const p2 = secProg(omniSec);
       const inOmni = p2 > 0.001 && p2 < 0.999;
-      let m = 0;
-      if (inOmni) {
-        if (p2 < 0.35) { const x = p2 / 0.35; m = x * x * (3 - 2 * x); }
-        else if (p2 > 0.65) { const x = (1 - p2) / 0.35; m = x * x * (3 - 2 * x); }
-        else m = 1;
-      }
-      mesh.scale.setScalar(inOmni ? Math.max(0.0001, 1 - m) : 1);
-      omniGroup.visible = inOmni && m > 0.002;
+      const mO = inOmni ? morphAmt(p2) : 0;
+      omniGroup.visible = inOmni && mO > 0.002;
       if (omniGroup.visible) {
-        omniGroup.scale.setScalar(Math.max(0.001, m));
-        updateWaves(t, m);
+        omniGroup.scale.setScalar(Math.max(0.001, mO));
+        updateWaves(t, mO);
       }
+
+      // section-4 pin: morph logo into a YouTube icon (badge faces the camera)
+      const p4 = secProg(ytSec);
+      const inYt = p4 > 0.001 && p4 < 0.999;
+      const mY = inYt ? morphAmt(p4) : 0;
+      ytGroup.visible = inYt && mY > 0.002;
+      if (ytGroup.visible) {
+        ytGroup.scale.setScalar(Math.max(0.001, mY));
+        // natural resting tilt (like the logo's hero angle), minus the big scroll spin
+        const tilt = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(0.12 + Math.sin(t * 0.4) * 0.03, -0.28 + Math.cos(t * 0.3) * 0.04, 0)
+        );
+        ytGroup.quaternion.copy(group.quaternion).invert().multiply(tilt);
+      }
+
+      // logo shrinks away while morphing into ring or youtube icon
+      mesh.scale.setScalar((inOmni || inYt) ? Math.max(0.0001, 1 - Math.max(mO, mY)) : 1);
 
       // section-3 pin: explode logo into cubes and reassemble
       let p = 0;
@@ -307,6 +367,7 @@ export default function LastcloudScene() {
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
+      (window as unknown as { __lenis?: Lenis }).__lenis = undefined;
       lenis.destroy();
       pmrem.dispose();
       renderer.dispose();
