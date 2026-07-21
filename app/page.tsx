@@ -48,6 +48,15 @@ export default function Home() {
     document.documentElement.style.overflow = workOpen ? "hidden" : "";
   }, [workOpen]);
 
+  // open the portfolio on load if the URL is #work (deep link / refresh)
+  useEffect(() => {
+    if (window.location.hash === "#work") {
+      setWorkOpen(true);
+      pausedRef.current = true;
+      lenisCtl()?.stop();
+    }
+  }, []);
+
   return (
     <>
       <LastcloudScene pausedRef={pausedRef} />
@@ -104,30 +113,32 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 04 CHANNELS — pinned: logo morphs into a YouTube icon */}
+        {/* 04 CHANNELS — temporarily removed (uncomment to restore)
         <section className="right pin-section pin-youtube">
           <div className="pin-inner">
             <div className="panel">
               <div className="stat">
                 3,388,875<span>Views</span>
               </div>
-              <h2>YouTube<br />Instagram</h2>
-              <div className="cta-row">
-                <a className="cta" href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube →</a>
-                <a className="cta cta--ghost" href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram →</a>
+              <div className="channels">
+                <a className="channel" href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">
+                  YouTube<span className="channel__arr">-&gt;</span>
+                </a>
+                <a className="channel" href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">
+                  Instagram<span className="channel__arr">-&gt;</span>
+                </a>
               </div>
             </div>
           </div>
         </section>
+        */}
 
         {/* FOOTER */}
         <footer className="footer">
           <h2>Contact</h2>
           <div className="links">
             <a href="mailto:jhy0219@gmail.com">Email</a>
-            <a href="https://www.youtube.com/@lastcloud" target="_blank" rel="noreferrer">YouTube</a>
             <a href="https://www.instagram.com/lastcloud_official/" target="_blank" rel="noreferrer">Instagram</a>
-            <a href="https://omni-teal.vercel.app/" target="_blank" rel="noreferrer">OMNI</a>
           </div>
           <p className="footer__copy">© 2026 lastcloud</p>
         </footer>

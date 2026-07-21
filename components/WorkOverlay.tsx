@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CATS = ["ALL", "BX", "UX", "AI", "MOTION"];
 
@@ -21,6 +21,15 @@ export default function WorkOverlay({
   const starsRef = useRef<HTMLCanvasElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const [cols, setCols] = useState(3); // 3 cols on desktop, 2 on mobile
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 860px)");
+    const apply = () => setCols(mq.matches ? 2 : 3);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -118,9 +127,9 @@ export default function WorkOverlay({
 
       <div className="work-main" data-lenis-prevent ref={mainRef}>
         <div className="work-grid">
-          {[0, 1, 2].map((ci) => (
+          {Array.from({ length: cols }, (_, ci) => (
             <div className="work-col" key={ci}>
-              {CARDS.filter((_, i) => i % 3 === ci).map((card) => (
+              {CARDS.filter((_, i) => i % cols === ci).map((card) => (
                 <div className="work-card" key={card.t} style={{ minHeight: card.h }}>
                   <span>{card.t}</span>
                 </div>
