@@ -6,9 +6,16 @@ const CATS = ["ALL", "BX", "UX", "AI", "MOTION"];
 
 // placeholder cards — varied heights for the masonry look (images swapped in later)
 const HEIGHTS = [380, 280, 460, 320, 240, 400, 300, 360, 260, 420, 300, 340];
+
+// card images: put files in /public/work/ and map them here (index -> path)
+const IMAGES: Record<number, string> = {
+  0: "/work/1.jpg",
+};
+
 const CARDS = Array.from({ length: 24 }, (_, i) => ({
   h: HEIGHTS[i % HEIGHTS.length],
   t: `Project ${String(i + 1).padStart(2, "0")}`,
+  img: IMAGES[i],
 }));
 
 export default function WorkOverlay({
@@ -131,6 +138,7 @@ export default function WorkOverlay({
             <div className="work-col" key={ci}>
               {CARDS.filter((_, i) => i % cols === ci).map((card) => (
                 <div className="work-card" key={card.t} style={{ minHeight: card.h }}>
+                  {card.img && <img src={card.img} alt={card.t} loading="lazy" />}
                   <span>{card.t}</span>
                 </div>
               ))}
