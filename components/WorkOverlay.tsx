@@ -139,7 +139,6 @@ export default function WorkOverlay({
               {CARDS.filter((_, i) => i % cols === ci).map((card) => (
                 <div className="work-card" key={card.t} style={{ minHeight: card.h }}>
                   {card.img && <img src={card.img} alt={card.t} loading="lazy" />}
-                  <span>{card.t}</span>
                 </div>
               ))}
             </div>
